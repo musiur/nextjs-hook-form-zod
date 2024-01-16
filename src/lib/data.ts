@@ -13,7 +13,7 @@ export const FeatureLinks: TFeatureLink[] = [
   {
     id: 3,
     text: "Update any task",
-    link: "/tasks/update",
+    link: "/tasks",
   },
   {
     id: 4,
