@@ -1,10 +1,10 @@
-import { Suspense } from "react";
+import { FC, Suspense } from "react";
 import { GetTasks } from "../actions/action";
 import TaskTable from "./_components/tasktable";
 import TaskTableSkeleton from "./_components/tasktable.skeleton";
 import { MockLoading } from "@/lib/utils";
 
-const TaskList = async () => {
+const TaskList: FC = async () => {
   "use server";
   // await MockLoading();
   "no-store";
