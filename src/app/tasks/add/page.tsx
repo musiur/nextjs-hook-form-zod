@@ -38,8 +38,10 @@ import { MultiSelect } from "../_components/multiselect";
 import { TOptionItem, TPostUpdateReturn } from "@/lib/types/types";
 import { CreateTask } from "@/app/actions/action";
 import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
+  const router = useRouter();
   const { toast } = useToast();
   const form = useForm<TTaskFormSchema>({
     resolver: zodResolver(TaskFormSchema),
@@ -61,6 +63,7 @@ const Page = () => {
       description: response.message,
     });
     form.reset();
+    router.refresh();
   };
   return (
     <section className="container">
@@ -192,7 +195,7 @@ const Page = () => {
                 type="submit"
                 variant={form.formState.isSubmitting ? "outline" : "secondary"}
                 disabled={form.formState.isSubmitting}
-                style={{minWidth: "80px"}}
+                style={{ minWidth: "80px" }}
               >
                 {form.formState.isSubmitting ? "Adding..." : "Add"}
               </Button>

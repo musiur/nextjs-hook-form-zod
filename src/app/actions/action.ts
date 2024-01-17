@@ -2,17 +2,18 @@
 
 import { db } from "@/lib/db";
 import {
-  TGetTaskTableData,
   TTaskFormSchema,
 } from "@/lib/types/schemas/taskform.schema.type";
 import { convertPrismaResultToPlainObject } from "@/lib/utils";
-import { revalidatePath } from "next/cache";
-
+import { revalidatePath, revalidateTag } from "next/cache";
+const revalidate = () => {
+  revalidatePath('/', 'layout')
+}
 export const CreateTask = async (data: TTaskFormSchema) => {
   const result = await db.task.create({
     data,
   });
-  revalidatePath("/tasks");
+  revalidate();
   return {
     status: result ? true : false,
     message: result ? "Task created successfully" : "Something went wrong!",
@@ -25,7 +26,7 @@ export const UpdateTask = async (data: TTaskFormSchema, id: string) => {
     },
     data,
   });
-  revalidatePath("/tasks");
+  revalidate();
   return {
     status: result ? true : false,
     message: result ? "Task updated successfully" : "Something went wrong!",
@@ -53,7 +54,7 @@ export const GetTasks = async () => {
 export const DeleteTask = async (id: string) => {
   const result = await db.task.delete({ where: { id } });
   console.log(result);
-  revalidatePath("/tasks");
+  revalidate();
   return {
     status: result ? true : false,
     message: result ? "Task deleted successfully" : "Something went wrong!",
