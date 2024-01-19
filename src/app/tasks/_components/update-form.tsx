@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import {
@@ -36,36 +37,35 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { MultiSelect } from "../_components/multiselect";
 import { TOptionItem, TPostUpdateReturn } from "@/lib/types/types";
-import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
-import { CreateTask } from "@/app/actions/action";
+import { UpdateTask } from "@/app/actions/action";
 
-const Page = () => {
-  const router = useRouter();
-  const { toast } = useToast();
-  const form = useForm<TTaskFormSchema>({
-    resolver: zodResolver(TaskFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      assignee: "",
-      status: "todo",
-      label: ["bug"],
-    },
-  });
-
-  const onSubmit = async (data: TTaskFormSchema) => {
-    const response = await CreateTask(data);
-    toast({
-      variant: response.status ? "default" : "destructive",
-      title: "Creating new task!",
-      description: response.message,
+const UpdateForm = ({ ID, data }: { ID: string; data: any }) => {
+    const { toast } = useToast();
+    const {title, description, assignee, status, label, start, end} = data;
+    const form = useForm<TTaskFormSchema>({
+      resolver: zodResolver(TaskFormSchema),
+      defaultValues: {
+        title,
+        description,
+        assignee,
+        status,
+        label,
+        start: new Date(start),
+        end: new Date(end)
+      },
     });
-    form.reset();
-  };
-  return (
-    <section className="container">
-      <h3 className="pb-[32px]">Create new task</h3>
+  
+    const onSubmit = async (data: TTaskFormSchema) => {
+      const response: TPostUpdateReturn = await UpdateTask(data, ID);
+      // console.log(response);
+      toast({
+        variant: response.status ? "default" : "destructive",
+        title: `Updating task: #${ID}!`,
+        description: response.message,
+      });
+    };
+  
+    return (
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -98,14 +98,12 @@ const Page = () => {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
-                    You can put important links.
-                  </FormDescription>
+                  <FormDescription>You can put important links.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+  
             <FormField
               control={form.control}
               name="start"
@@ -187,7 +185,7 @@ const Page = () => {
                 </FormItem>
               )}
             />
-
+  
             <div className="pt-[12px]">
               <Button
                 type="submit"
@@ -195,7 +193,7 @@ const Page = () => {
                 disabled={form.formState.isSubmitting}
                 style={{ minWidth: "80px" }}
               >
-                {form.formState.isSubmitting ? "Adding..." : "Add"}
+                {form.formState.isSubmitting ? "Updating..." : "Update"}
               </Button>
             </div>
           </fieldset>
@@ -219,7 +217,10 @@ const Page = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={form.getValues("status")}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status for your task" />
@@ -246,7 +247,7 @@ const Page = () => {
                     OPTIONITEMS={multiOptions}
                     form={form}
                     name="label"
-                    defaultSelection={["good_first"]}
+                    defaultSelection={form.getValues("label")}
                   />
                   <FormDescription>Add labels</FormDescription>
                 </FormItem>
@@ -255,31 +256,29 @@ const Page = () => {
           </fieldset>
         </form>
       </Form>
-    </section>
-  );
-};
-
-export default Page;
-
-const multiOptions: TOptionItem[] = [
-  {
-    value: "documentation",
-    label: "documentation",
-  },
-  {
-    value: "enhancement",
-    label: "Enhancement",
-  },
-  {
-    value: "bug",
-    label: "Bug",
-  },
-  {
-    value: "fixing",
-    label: "Fixing",
-  },
-  {
-    value: "good_first",
-    label: "Good first",
-  },
-];
+    );
+  };
+export default UpdateForm;
+  
+  const multiOptions: TOptionItem[] = [
+    {
+      value: "documentation",
+      label: "documentation",
+    },
+    {
+      value: "enhancement",
+      label: "Enhancement",
+    },
+    {
+      value: "bug",
+      label: "Bug",
+    },
+    {
+      value: "fixing",
+      label: "Fixing",
+    },
+    {
+      value: "good_first",
+      label: "Good first",
+    },
+  ];

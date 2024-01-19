@@ -1,32 +1,34 @@
 "use server";
 
-import { db } from "@/lib/db";
-import {
-  TTaskFormSchema,
-} from "@/lib/types/schemas/taskform.schema.type";
-import { convertPrismaResultToPlainObject } from "@/lib/utils";
-import { revalidatePath, revalidateTag } from "next/cache";
-const revalidate = () => {
-  revalidatePath('/', 'layout')
-}
+import { TTaskFormSchema } from "@/lib/types/schemas/taskform.schema.type";
+import { revalidateTag } from "next/cache";
+
 export const CreateTask = async (data: TTaskFormSchema) => {
-  const result = await db.task.create({
-    data,
+  const response = await fetch("http://localhost:3000/api/tasks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
   });
-  revalidate();
+  const result = await response.json();
+  revalidateTag("tasks");
   return {
     status: result ? true : false,
     message: result ? "Task created successfully" : "Something went wrong!",
   };
 };
 export const UpdateTask = async (data: TTaskFormSchema, id: string) => {
-  const result = await db.task.update({
-    where: {
-      id,
+  // console.log({data})
+  const response = await fetch(`http://localhost:3000/api/tasks/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
     },
-    data,
+    body: JSON.stringify(data),
   });
-  revalidate();
+  const result = await response.json();
+  revalidateTag("tasks");
   return {
     status: result ? true : false,
     message: result ? "Task updated successfully" : "Something went wrong!",
@@ -34,17 +36,22 @@ export const UpdateTask = async (data: TTaskFormSchema, id: string) => {
 };
 
 export const GetTask = async (id: string) => {
-  console.log(id);
-  const result = await db.task.findRaw({ filter: { _id: { $oid: id } } });
-  const data: TTaskFormSchema = convertPrismaResultToPlainObject(result[0]);
+  // console.log(id);
+  const response = await fetch(`http://localhost:3000/api/tasks/${id}`, {
+    next: { tags: ["tasks"], revalidate: 0 },
+  });
+  let result = await response.json();
+  // console.log(result)
   return {
-    status: result.length ? true : false,
-    result: data,
+    status: result ? true : false,
+    result,
   };
 };
 export const GetTasks = async () => {
-  const result = await db.task.findMany();
-  console.log(result);
+  const response = await fetch("http://localhost:3000/api/tasks", {
+    next: { tags: ["tasks"], revalidate: 0 },
+  });
+  const result = await response.json();
   return {
     status: result ? true : false,
     result,
@@ -52,11 +59,20 @@ export const GetTasks = async () => {
 };
 
 export const DeleteTask = async (id: string) => {
-  const result = await db.task.delete({ where: { id } });
-  console.log(result);
-  revalidate();
-  return {
-    status: result ? true : false,
-    message: result ? "Task deleted successfully" : "Something went wrong!",
-  };
+  try {
+    const response = await fetch(`http://localhost:3000/api/tasks/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const result = await response.json();
+    revalidateTag("tasks");
+    return {
+      status: result ? true : false,
+      result,
+    };
+  } catch (error) {
+    console.log(error);
+  }
 };

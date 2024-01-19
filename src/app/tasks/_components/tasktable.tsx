@@ -204,7 +204,9 @@ export const columns: ColumnDef<TGetTaskTableData>[] = [
                   <AlertDialogAction
                     onClick={async () => {
                       const result = await DeleteTask(task.id);
-                      console.log(result);
+                      if(result?.status){
+                        window.location.reload();
+                      }
                     }}
                   >
                     Delete
