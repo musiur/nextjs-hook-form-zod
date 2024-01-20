@@ -1,10 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  CaretSortIcon,
-  ChevronDownIcon,
-} from "@radix-ui/react-icons";
+import { CaretSortIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -203,10 +200,10 @@ export const columns: ColumnDef<TGetTaskTableData>[] = [
                 <AlertDialogFooter>
                   <AlertDialogAction
                     onClick={async () => {
-                      const result = await DeleteTask(task.id);
-                      if(result?.status){
-                        window.location.reload();
-                      }
+                      await DeleteTask(task.id);
+                      // if (result?.status) {
+                      //   window.location.reload();
+                      // }
                     }}
                   >
                     Delete
