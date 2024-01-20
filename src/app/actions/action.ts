@@ -1,37 +1,28 @@
 "use server";
 
+import { db } from "@/lib/db";
 import { TTaskFormSchema } from "@/lib/types/schemas/taskform.schema.type";
-import { revalidatePath, revalidateTag } from "next/cache";
-
-const BASEURL = process.env.BASEURL;
+import { convertPrismaResultToPlainObject } from "@/lib/utils";
+import { revalidatePath, unstable_noStore } from "next/cache";
 
 export const CreateTask = async (data: TTaskFormSchema) => {
-  const response = await fetch(`${BASEURL}/tasks`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+  const result = await db.task.create({
+    data,
   });
-  const result = await response.json();
-  // revalidateTag("tasks");
-  revalidatePath("/tasks");
+  revalidatePath("tasks");
   return {
     status: result ? true : false,
     message: result ? "Task created successfully" : "Something went wrong!",
   };
 };
 export const UpdateTask = async (data: TTaskFormSchema, id: string) => {
-  // console.log({data})
-  const response = await fetch(`${BASEURL}/tasks/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
+  const result = await db.task.update({
+    where: {
+      id,
     },
-    body: JSON.stringify(data),
+    data,
   });
-  const result = await response.json();
-  revalidatePath("/tasks");
+  revalidatePath("tasks");
   return {
     status: result ? true : false,
     message: result ? "Task updated successfully" : "Something went wrong!",
@@ -39,48 +30,30 @@ export const UpdateTask = async (data: TTaskFormSchema, id: string) => {
 };
 
 export const GetTask = async (id: string) => {
-  // console.log(id);
-  const response = await fetch(`${BASEURL}/tasks/${id}`, {
-    cache: "no-store",
-  });
-  let result = await response.json();
-  // console.log(result)
+  unstable_noStore();
+  const result = await db.task.findRaw({ filter: { _id: { $oid: id } } });
+  const data: TTaskFormSchema = convertPrismaResultToPlainObject(result[0]);
+  return {
+    status: result.length ? true : false,
+    result: data,
+  };
+};
+export const GetTasks = async () => {
+  unstable_noStore();
+  const result = await db.task.findMany();
+  console.log(result);
   return {
     status: result ? true : false,
     result,
   };
 };
-export const GetTasks = async () => {
-  try {
-    const response = await fetch(`${BASEURL}/tasks`, {
-      cache: "no-store",
-    });
-    const result = await response.json();
-    return {
-      status: result ? true : false,
-      result: result.length ? result : [],
-    };
-  } catch (error) {
-    console.log(error);
-    return { result: [] };
-  }
-};
 
 export const DeleteTask = async (id: string) => {
-  try {
-    const response = await fetch(`${BASEURL}/tasks/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const result = await response.json();
-    revalidatePath("tasks");
-    return {
-      status: result ? true : false,
-      result,
-    };
-  } catch (error) {
-    console.log(error);
-  }
+  const result = await db.task.delete({ where: { id } });
+  console.log(result);
+  revalidatePath("tasks");
+  return {
+    status: result ? true : false,
+    message: result ? "Task deleted successfully" : "Something went wrong!",
+  };
 };
